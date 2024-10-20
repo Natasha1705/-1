@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+input {
+    width: 400px; 
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 7px;
+    background-color: rgb(163, 204, 204);
+}
+
+.hidden {
+    display: none;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-around;
+    border-bottom: 1px solid #ddd;
+    gap: 10px;
+}
+
+li.completed {
+    text-decoration: line-through;
+    color: gray;
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Планировщик задач</h1>
+    <input type="text" id="taskInput" placeholder="Введите задачу" />
+    <button id="addTaskButton">Добавить задачу</button>
+    <div id="taskListContainer">
+        <ul id="taskList"></ul>
+        <p id="noTasksMessage" class="hidden">Задачи отсутствуют</p>
+        <button id="clearTasksButton" class="hidden">Очистить список</button>
+    </div>
+</div>
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+    const taskInput = document.getElementById("taskInput");
+    const addTaskButton = document.getElementById("addTaskButton");
+    const taskList = document.getElementById("taskList");
+    const noTasksMessage = document.getElementById("noTasksMessage");
+    const clearTasksButton = document.getElementById("clearTasksButton");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    function renderTasks() {
+        taskList.innerHTML = "";
+        tasks.forEach((task, index) => {
+            const li = document.createElement("li");
+            li.className = task.completed ? "completed" : "";
+            li.innerHTML = `
+                <input type="checkbox" ${task.completed ? "checked" : ""} data-index="${index}">
+                ${task.text}
+                <button class="deleteButton" data-index="${index}">Удалить</button>
+            `;
+            taskList.appendChild(li);
+        });
+
+        if (tasks.length === 0) {
+            noTasksMessage.classList.remove("hidden");
+            clearTasksButton.classList.add("hidden");
+        } else {
+            noTasksMessage.classList.add("hidden");
+            clearTasksButton.classList.remove("hidden");
+        }
+    }
+
+    addTaskButton.addEventListener("click", () => {
+        const taskText = taskInput.value.trim();
+        if (taskText) {
+            tasks.push({ text: taskText, completed: false });
+            taskInput.value = "";
+            saveTasks();
+            renderTasks();
+        }
+    });
+
+    taskList.addEventListener("click", (event) => {
+        if (event.target.type === "checkbox") {
+            const index = event.target.dataset.index;
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+            renderTasks();
+        } else if (event.target.classList.contains("deleteButton")) {
+            const index = event.target.dataset.index;
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+        }
+    });
+
+    clearTasksButton.addEventListener("click", () => {
+        tasks = [];
+        saveTasks();
+        renderTasks();
+    });
+
+    function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    renderTasks();
+});
+</script>
+</body>
+</html>
